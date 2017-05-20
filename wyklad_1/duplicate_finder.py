@@ -31,6 +31,7 @@ class DuplicateFinder:
     @property
     def duplicates(self):
         """:obj: `list` of :obj: `list` of `str` List of list of duplicated file paths."""
+        self.__collisions = defaultdict(list)
         self.__find_duplicates()
         return self.__collisions
 
