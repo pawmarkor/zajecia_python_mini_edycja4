@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <title>Statystyki dla {{ path }}</title>
+</head>
+<body>
+    <h1>Nazwa: {{ path }}</h1>
+    <h2>Wielkość: {{ tree_data.size }} B</h2>
+    {% if parent_path %}
+        <h2>Rodzic: <a href="{{ url_for('stats', path=parent_path) }}">
+                        {{ parent_path }}
+                    </a>
+        </h2>
+    {% endif %}
+    <h2>Dzieci:</h2>
+    <ul>
+        {% for child_path, child_data in tree_data.children.items() %}
+        <li>
+            {% if child_data.type == 'dir' %}
+                <a href="{{ url_for('stats', path=path + '/' + child_path) }}">
+                    {{ path }}/{{ child_path }} : {{ child_data.size }} B
+                </a>
+            {% else %}
+                {{ path }}/{{ child_path }} : {{ child_data.size }} B
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
