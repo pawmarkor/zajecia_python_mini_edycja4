@@ -2,12 +2,17 @@ import hashlib
 # https://en.wikipedia.org/wiki/Pigeonhole_principle
 # https://pl.wikipedia.org/wiki/Zasada_szufladkowa_Dirichleta
 
+CHUNK_SIZE = 1024
+
 
 def get_hash(f_path, mode='md5'):
     h = hashlib.new(mode)
-    with open(f_path, 'rb') as f:
-        for chunk in f:
-            h.update(chunk)
+    with open(f_path, 'br') as f:
+        buffer = f.read(CHUNK_SIZE)
+        while buffer:
+            h.update(buffer)
+            buffer = f.read(CHUNK_SIZE)
+
     hash_text = h.hexdigest()
     return hash_text
     
