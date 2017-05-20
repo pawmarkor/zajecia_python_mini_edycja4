@@ -1,48 +1,74 @@
 import os
 
+from filecmp import cmp as file_cmp
+from collections import defaultdict
+
 from file_hasher import get_hash
 
 
-def duplicate_finder(topdir=None):
-    if topdir is None:
-        topdir = os.getcwd()
-    data = {}
-    hashed_files = set()
-    hashes = {}
-    for root, dirs, files in os.walk(topdir):
-        #print(root, dirs, files)
-        for single_file in files:
-            f_path = os.path.join(root, single_file)
-            size = os.path.getsize(f_path)
-            size_list = data.get(size, [])
-            size_list.append(f_path)
-            if len(size_list) > 1:
-                for file_path in size_list:
-                    if file_path not in hashed_files:
-                        f_hash = get_hash(file_path)
-                        size_hash_list = hashes.get(f_hash, [])
-                        size_hash_list.append(file_path)
-                        hashes[f_hash] = size_hash_list
-                        if len(size_hash_list) > 1:
-                            print(
-                                'hash {} collision for following files:\n\t{}\n'.format(
-                                    f_hash, '\n\t'.join(size_hash_list)
-                                )
-                            )
-            data[size] = size_list
-    # TODO: PRACA DOMOWA: w tym miejscu porównać binarnie pliki, ponieważ
-    # identyczne wartości hash nie znaczą, że pliki są identyczne
-    # podpowiedź: https://docs.python.org/3.5/library/filecmp.html
-    return data, hashes
-    
-def format_dict(my_dict):
-    keys = list(my_dict.keys())
-    keys.sort()
-    entry_format = '\t{}: {}'
-    entry_lines = (entry_format.format(k, my_dict[k]) for k in keys)
-    return '{}\n{}\n{}'.format('{', '\n'.join(entry_lines), '}')
-        
-        
-data, hashes = duplicate_finder()
-print(format_dict(data))
-print(format_dict(hashes))
+class DuplicateFinder:
+    """Finds duplicates in a given directory tree.
+
+    DuplicateFinder finds duplicates based on file size, file hash or
+    file content; it works in a lazy way i.e. it  computes hashes and compares
+    file content only when necessary.
+
+    Args:
+        dir_base (str): Directory tree base to be searched for file duplicates.
+
+    """
+
+    def __init__(self, dir_base=None):
+        self.__seen_files_of_size = defaultdict(list)
+        self.__seen_files_of_hash = defaultdict(list)
+        self.__collisions = defaultdict(list)
+        self.__dir_base = os.getcwd() if dir_base is None else dir_base
+
+    @property
+    def duplicates(self):
+        """:obj: `list` of :obj: `list` of `str` List of list of duplicated file paths."""
+        self.__find_duplicates()
+        return self.__collisions
+
+    def __find_duplicates(self):
+        for root, dirs, files in os.walk(self.__dir_base):
+            for file in files:
+                file_path = os.path.join(root, file)
+                self.__size_collision_search(file_path)
+        self.__prepare_results()
+
+    def __prepare_results(self):
+        for first_path, collisions in self.__collisions.items():
+            collisions.append(first_path)
+        self.__collisions = list(self.__collisions.values())
+
+    def __size_collision_search(self, file_path):
+        file_size = os.path.getsize(file_path)
+        seen_files_of_size = self.__seen_files_of_size[file_size]
+        if seen_files_of_size:
+            self.__hash_collision_search(file_path, seen_files_of_size)
+        self.__seen_files_of_size[file_size].append(file_path)
+
+    def __hash_collision_search(self, file_path, seen_files_of_size):
+        if len(seen_files_of_size) == 1:
+            first_file_path = seen_files_of_size[0]
+            first_file_hash = get_hash(first_file_path)
+            self.__seen_files_of_hash[first_file_hash].append(first_file_path)
+        file_hash = get_hash(file_path)
+        for collision_candidate in self.__seen_files_of_hash[file_hash]:
+            if self.__content_collision_found(file_path, collision_candidate):
+                break
+        self.__seen_files_of_hash[file_hash].append(file_path)
+
+    def __content_collision_found(self, file_path, collision_candidate):
+        equal_content = file_cmp(file_path, collision_candidate)
+        if equal_content:
+            self.__update_collisions(file_path, collision_candidate)
+        return equal_content
+
+    def __update_collisions(self, file_path, collision):
+        self.__collisions[collision].append(file_path)
+
+
+if __name__ == '__main__':
+    print(DuplicateFinder('/home/pawkor/daftcode').duplicates)
