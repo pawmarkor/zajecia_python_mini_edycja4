@@ -1,10 +1,13 @@
 import os
 
+import logging
+
 from filecmp import cmp as file_cmp
 from collections import defaultdict
 
 from file_hasher import get_hash
 
+logger = logging.getLogger(__name__)
 
 class DuplicateFinder:
     """Finds duplicates in a given directory tree.
@@ -34,7 +37,12 @@ class DuplicateFinder:
         for root, dirs, files in os.walk(self.__dir_base):
             for file in files:
                 file_path = os.path.join(root, file)
-                self.__size_collision_search(file_path)
+                try:
+                    self.__size_collision_search(file_path)
+                except OSError:
+                    logger.warning("Unable to find duplicates for {}".format(
+                        file_path,
+                    ))
         self.__prepare_results()
 
     def __prepare_results(self):
@@ -51,17 +59,31 @@ class DuplicateFinder:
 
     def __hash_collision_search(self, file_path, seen_files_of_size):
         if len(seen_files_of_size) == 1:
-            first_file_path = seen_files_of_size[0]
-            first_file_hash = get_hash(first_file_path)
-            self.__seen_files_of_hash[first_file_hash].append(first_file_path)
+            self.__update_hashes(seen_files_of_size[0])
+
         file_hash = get_hash(file_path)
         for collision_candidate in self.__seen_files_of_hash[file_hash]:
             if self.__content_collision_found(file_path, collision_candidate):
                 break
         self.__seen_files_of_hash[file_hash].append(file_path)
 
+    def __update_hashes(self, file_path):
+        try:
+            first_file_hash = get_hash(file_path)
+        except OSError:
+            logger.warning("Unable to compute hash for {}".format(file_path))
+        else:
+            self.__seen_files_of_hash[first_file_hash].append(file_path)
+
     def __content_collision_found(self, file_path, collision_candidate):
-        equal_content = file_cmp(file_path, collision_candidate)
+        try:
+            equal_content = file_cmp(file_path, collision_candidate)
+        except OSError:
+            logger.warning("Unable to compare files {} and {}".format(
+                file_path,
+                collision_candidate,
+            ))
+            return False
         if equal_content:
             self.__update_collisions(file_path, collision_candidate)
         return equal_content
