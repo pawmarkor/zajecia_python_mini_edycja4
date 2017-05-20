@@ -9,6 +9,7 @@ from file_hasher import get_hash
 
 logger = logging.getLogger(__name__)
 
+
 class DuplicateFinder:
     """Finds duplicates in a given directory tree.
 
@@ -92,5 +93,5 @@ class DuplicateFinder:
         self.__collisions[collision].append(file_path)
 
 
-if __name__ == '__main__':
-    print(DuplicateFinder('/home/pawkor/daftcode').duplicates)
+if __name__ == "__main__":
+    print(DuplicateFinder("/home/pawkor/daftcode").duplicates)
