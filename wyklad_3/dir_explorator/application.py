@@ -1,5 +1,5 @@
 import os
-from file_walker import my_dir_walker_with_size_counting, EntityData
+from file_walker import my_dir_walker_with_size_counting
 from flask import Flask, render_template, redirect, url_for, abort
 app = Flask(__name__)
 
@@ -7,8 +7,7 @@ root_dir = '/home/pawkor/zajecia_python_mini_edycja4/wyklad_3/dir_explorator'
 test_dir = 'test dir'
 full_test_path = os.path.join(root_dir, test_dir)
 
-tree_data = my_dir_walker_with_size_counting(full_test_path)[full_test_path]
-tree_data = EntityData('', '', {test_dir: tree_data})
+tree_data = my_dir_walker_with_size_counting(full_test_path, test_dir)
 
 
 @app.errorhandler(404)
