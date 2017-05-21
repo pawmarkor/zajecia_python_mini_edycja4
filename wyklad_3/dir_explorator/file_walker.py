@@ -57,7 +57,7 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
 
     try:
         topdir_data = EntityData('dir', *inner_walker(topdir))
-        return EntityData('dir', topdir_data, {topname: topdir_data})
+        return EntityData('dir', topdir_data.size, {topname: topdir_data})
     except OSError as error:
         logger.error("Unable to compute size for {} because of {}"
                      .format(topdir, error))
