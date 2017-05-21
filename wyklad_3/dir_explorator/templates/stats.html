@@ -16,11 +16,11 @@
     <ul>
         {% for child_path, child_data in tree_data.children.items() %}
         <li>
-            {% if child_data.type == 'dir' %}
+            {% if child_data.is_dir() %}
                 <a href="{{ url_for('stats', path=path / child_path) }}">
                     {{ path / child_path }} : {{ child_data.size }} B
                 </a>
-            {% else %}
+            {% elif child_data.is_file() %}
                 {{ path / child_path }} : {{ child_data.size }} B
             {% endif %}
         </li>
