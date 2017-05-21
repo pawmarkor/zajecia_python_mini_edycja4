@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 from pprint import pprint
 from collections import namedtuple
 
@@ -10,19 +10,20 @@ logger = logging.getLogger(__name__)
 
 def my_dir_walker_with_size_counting(topdir=None, topname=None):
     if topdir is None:
-        topdir = os.getcwd()
+        topdir = Path()
     if topname is None:
         topname = topdir
+    topdir = str(topdir)
+    topname = str(topname)
 
-    dir_tree_stack = []
+    current_path = Path()
 
     def inner_walker(curr_dir):
+        nonlocal current_path
         children = {}
-        current_path = os.path.join(*dir_tree_stack, curr_dir)
-        entries = os.scandir(current_path)
-        dir_tree_stack.append(curr_dir)
+        current_path = current_path / curr_dir
         size = 0
-        for entry in entries:
+        for entry in current_path.iterdir():
             if entry.is_symlink():
                 continue
             if entry.is_dir():
@@ -38,7 +39,7 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
                 entry_children
             )
             size += entry_size
-        dir_tree_stack.pop()
+        current_path = current_path.parent
         return size, children
 
     try:
@@ -49,5 +50,6 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
                      .format(topdir, error))
         return EntityData('', '', {})
 
+
 if __name__ == "__main__":
-    pprint(my_dir_walker_with_size_counting("/home/pawkor/daftcode"))
+    pprint(my_dir_walker_with_size_counting())
