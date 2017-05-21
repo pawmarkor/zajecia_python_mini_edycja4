@@ -34,10 +34,16 @@ def stats(path=None):
     if path is None:
         return redirect(url_for('stats', path=explore_dir.name))
     curr_tree = tree_data
-    for path_part in path.parts:
+    path_parts = path.parts
+    for path_part in path_parts:
         try:
             curr_tree = curr_tree.children[path_part]
         except KeyError:
+            if len(path_parts) == 1 and path_parts[0] == explore_dir.name:
+                app.logger.error(
+                    'The explore dir {} does not exist'.format(str(explore_dir))
+                )
+                abort(500)
             abort(404)
     parent_path = path.parent
 
