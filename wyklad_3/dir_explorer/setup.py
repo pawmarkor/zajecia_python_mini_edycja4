@@ -18,6 +18,9 @@ setup(
     install_requires=[
         "flask==0.12.2",
     ],
+    setup_requires=[
+        "nose==1.3.7",
+    ],
     entry_points={
         "console_scripts": [
             "create_demo_data = dir_explorer.main:create_demo_data",
@@ -25,4 +28,5 @@ setup(
             "runserver = dir_explorer.main:runserver",
         ]
     },
+    test_suite="tests",
 )

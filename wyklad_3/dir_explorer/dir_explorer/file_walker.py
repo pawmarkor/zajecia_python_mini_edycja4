@@ -44,7 +44,7 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
             elif entry.is_file():
                 entry_type = EntityType.FILE
                 entry_size = entry.stat().st_size
-                entry_children = []
+                entry_children = {}
             children[entry.name] = EntityData(
                 entry_type,
                 entry_size,
@@ -55,8 +55,8 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
         return size, children
 
     try:
-        topdir_data = EntityData('dir', *inner_walker(topdir))
-        return EntityData('dir', topdir_data.size, {topname: topdir_data})
+        topdir_data = EntityData(EntityType.DIR, *inner_walker(topdir))
+        return EntityData(EntityType.DIR, topdir_data.size, {topname: topdir_data})
     except OSError as error:
         logger.error("Unable to compute size for {} because of {}"
                      .format(topdir, error))

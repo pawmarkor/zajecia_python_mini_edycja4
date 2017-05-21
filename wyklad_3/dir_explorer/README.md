@@ -42,3 +42,9 @@ Please note that
 
 will remove `my_path` from your OS
 (i.e. not only demo files but also all the files in `my_path`) **be carefull, using it may be dangerous!**
+
+## Testing
+
+In order to run tests execute:
+
+    python setup.py nosetests
