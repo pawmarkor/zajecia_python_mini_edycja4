@@ -1,7 +1,6 @@
 import logging
 from enum import Enum
 from pathlib import Path
-from pprint import pprint
 from collections import namedtuple
 
 
@@ -62,7 +61,3 @@ def my_dir_walker_with_size_counting(topdir=None, topname=None):
         logger.error("Unable to compute size for {} because of {}"
                      .format(topdir, error))
         return EntityData('', '', {})
-
-
-if __name__ == "__main__":
-    pprint(my_dir_walker_with_size_counting())

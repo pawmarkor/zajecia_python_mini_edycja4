@@ -1,15 +1,14 @@
 from pathlib import Path
 from werkzeug.routing import PathConverter
-from file_walker import my_dir_walker_with_size_counting
 from flask import Flask, render_template, redirect, url_for, abort
 
-root_dir = Path(
-    '/home/pawkor/zajecia_python_mini_edycja4/wyklad_3/dir_explorator',
-)
-test_dir = Path('test dir')
-full_test_path = root_dir / test_dir
+from dir_explorer.file_walker import my_dir_walker_with_size_counting
+from dir_explorer.configuration import explore_dir
 
-tree_data = my_dir_walker_with_size_counting(full_test_path, topname=test_dir)
+tree_data = my_dir_walker_with_size_counting(
+    explore_dir,
+    topname=explore_dir.name
+)
 
 
 class PathLibPathConverter(PathConverter):
@@ -25,7 +24,7 @@ app.url_map.converters['Path'] = PathLibPathConverter
 def page_not_found(error):
     return render_template(
         'not_found.html',
-        root_path=test_dir,
+        root_path=explore_dir.name,
     )
 
 
@@ -33,7 +32,7 @@ def page_not_found(error):
 @app.route('/stats/<Path:path>', methods=['GET'])
 def stats(path=None):
     if path is None:
-        return redirect(url_for('stats', path=test_dir))
+        return redirect(url_for('stats', path=explore_dir.name))
     curr_tree = tree_data
     for path_part in path.parts:
         try:
@@ -48,7 +47,3 @@ def stats(path=None):
         parent_path=parent_path if parent_path != Path('.') else None,
         path=path,
     )
-
-
-if __name__ == "__main__":
-    app.run()
